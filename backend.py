@@ -76,7 +76,6 @@ def start_container():
     version = data.get("version")
     custom_name = data.get("name")
     image = DISTROS.get(distro, {}).get(version)
-    port = random.randint(3001, 3999)  # Random port to prevent conflicts
 
     # Ensure 'latest' always pulls the newest version
     if version == "latest":
@@ -100,7 +99,7 @@ def start_container():
     container = client.containers.run(
         image,
         detach=True,
-        ports={'7681/tcp': port},
+        ports={'7681/tcp': None},
         command=command,
         name=custom_name if custom_name else None
     )
