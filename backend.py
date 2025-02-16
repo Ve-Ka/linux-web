@@ -9,25 +9,25 @@ client = docker.DockerClient(base_url='unix:///var/run/docker.sock')
 
 DISTROS = {
     "ubuntu": {
-        "latest": "ubuntu:latest",
         "20.04": "ubuntu:20.04",
-        "22.04": "ubuntu:22.04"
+        "22.04": "ubuntu:22.04",
+        "latest": "ubuntu:latest"
     },
     "debian": {
-        "latest": "debian:latest",
         "10": "debian:10",
         "11": "debian:11",
-        "12": "debian:12"
+        "12": "debian:12",
+        "latest": "debian:latest"
     },
     "alpine": {
-        "latest": "alpine:latest",
         "3.15": "alpine:3.15",
-        "3.16": "alpine:3.16"
+        "3.16": "alpine:3.16",
+        "latest": "alpine:latest"
     },
     "nginx": {
-        "latest": "nginx:latest",
         "debian": "nginx:bookworm",
-        "alpine": "nginx:alpine"
+        "alpine": "nginx:alpine",
+        "latest": "nginx:latest"
     }
 }
 
@@ -72,19 +72,14 @@ location /{port}/ {{
 @app.route('/start', methods=['POST'])
 def start_container():
     data = request.json
-    distro = data.get("distro", "ubuntu")
-    version = data.get("version", "latest")
+    distro = data.get("distro")
+    version = data.get("version")
     custom_name = data.get("name")
-
     image = DISTROS.get(distro, {}).get(version)
-    if not image:
-        return jsonify({"error": "Invalid distro or version"}), 400
-
     port = random.randint(3001, 3999)  # Random port to prevent conflicts
 
     # Ensure 'latest' always pulls the newest version
     if version == "latest":
-        image = f"{distro}:latest"
         try:
             # Pull the latest image using Docker API
             docker_client.images.pull(image)
