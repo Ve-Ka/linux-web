@@ -82,6 +82,15 @@ def start_container():
 
     port = random.randint(3001, 3999)  # Random port to prevent conflicts
 
+    # Ensure 'latest' always pulls the newest version
+    if version == "latest":
+        image = f"{distro}:latest"
+        try:
+            # Pull the latest image using Docker API
+            docker_client.images.pull(image)
+        except docker.errors.APIError as e:
+            return jsonify({"error": f"Failed to pull image: {str(e)}"}), 500
+
     # Different command for Debian/Ubuntu to install ttyd
     if distro in ["ubuntu", "debian"] or (distro == "nginx" and version != "alpine"):
         command = (
