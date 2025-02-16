@@ -386,6 +386,10 @@
                 `;
                 list.appendChild(row);
 
+                row.querySelector(".delete-btn").addEventListener("click", function () {
+                    deleteContainer(c.id);
+                });
+
                 checkCLIStatus(c.port, `status-${c.id}`);
             });
         }
