@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLI Distro Launcher</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: auto;
+        }
+
+        /* Card Container */
+        .container {
+            width: 90%;
+            max-width: 700px;
+            background: #1e1e1e;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .container:hover {
+            transform: translateY(-3px);
+        }
+
+        /* Headers */
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        h1::after {
+            content: "";
+            display: block;
+            width: 120px;
+            height: 3px;
+            background: #007bff;
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+
+        h2 {
+            position: relative;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+        }
+
+        h2::before {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 2px;
+            background: #444; /* Gray line */
+            margin-bottom: 15px;
+        }
+
+        /* Distro & Version Selection */
+        .select-container {
+            display: flex;
+            justify-content: center; 
+            gap: 20px; 
+            margin-bottom: 20px;
+        }
+        label {
+            font-size: 20px;
+            font-weight: 700;
+            display: block;
+            text-align: center; 
+            margin-bottom: 8px;
+            margin-top: 10px;
+        }
+        .select-container div {
+            flex: 1;
+            max-width: 280px; 
+            position: relative;
+        }
+        select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            background: #2a2a2a;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            appearance: none; 
+            transition: 0.3s ease;
+        }
+        .select-container div::after {
+            content: '\25BC'; 
+            font-size: 16px;
+            color: #ddd;
+            position: absolute;
+            top: 70%;
+            right: 15px;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        select:hover, select:focus {
+            background: #333;
+            border-color: #0056b3;
+        }
+        select option {
+            background: #1e1e1e;
+            color: white;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* Launch Button */
+        button {
+            width: 25%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #007bff;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        button:hover {
+            background: #0056b3;
+            transform: scale(1.03);
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background: #007bff;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+        tr:hover {
+            background: #292929;
+        }
+
+        /* Status & Actions */
+        .status {
+            font-weight: bold;
+            color: #ff9800;
+        }
+        .cli-link {
+            color: #4caf50;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .cli-link:hover {
+            color: #6de28a;
+        }
+
+        .delete-btn {
+            width: 40px;  
+            height: 40px; 
+            margin-top: 0;
+            padding: 0; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: darkred;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #1e1e1e;
+            width: 95%;
+            height: 90%;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .modal iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 0px;
+            right: 15px;
+            background: red;
+            color: white;
+            border: none;
+            font-size: 16px;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: darkred;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+    </style>
+</head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<body>
+    <div class="container">
+        <h1>🐧 CLI Distro Launcher</h1>
+
+        <!-- Distro & Version Selection -->
+        <div class="select-container">
+            <div>
+                <label for="distro">-- Distro --</label>
+                <select id="distro" onchange="updateVersions()">
+                    <option value="">Select a Distro</option>
+                </select>
+            </div>
+            <div>
+                <label for="version">-- Version --</label>
+                <select id="version">
+                    <option value="">Select a Version</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button id="launch">🚀 Launch</button>
+        </div>
+        
+
+        <h2>Sessions</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Image</th>
+                    <th>Status</th>
+                    <th>Port</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="container-list">
+                <!-- Active sessions will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal for CLI -->
+    <div class="modal" id="cliModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">✖</button>
+            <iframe id="cliFrame"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let DISTRO_VERSIONS = {};
+
+        // Fetch distros from backend on page load
+        async function loadDistros() {
+            try {
+                const response = await fetch("/api/distros");
+                DISTRO_VERSIONS = await response.json();
+
+                const distroSelect = document.getElementById("distro");
+                distroSelect.innerHTML = '<option value="">Select a Distro</option>'; 
+
+                for (let distro in DISTRO_VERSIONS) {
+                    let option = document.createElement("option");
+                    option.value = distro;
+                    option.textContent = distro.charAt(0).toUpperCase() + distro.slice(1);
+                    distroSelect.appendChild(option);
+                }
+
+                distroSelect.addEventListener("change", updateVersions);
+            } catch (error) {
+                console.error("Error loading distros:", error);
+            }
+        }
+
+        function updateVersions() {
+            const distroSelect = document.getElementById("distro");
+            const versionSelect = document.getElementById("version");
+            const selectedDistro = distroSelect.value;
+
+            versionSelect.innerHTML = '<option value="">Select a Version</option>'; 
+
+            if (selectedDistro && DISTRO_VERSIONS[selectedDistro]) {
+                for (let version in DISTRO_VERSIONS[selectedDistro]) {
+                    let option = document.createElement("option");
+                    option.value = version;
+                    option.textContent = version;
+                    versionSelect.appendChild(option);
+                }
+            }
+        }
+
+        async function fetchContainers() {
+            const response = await fetch("/api/list");
+            const containers = await response.json();
+            const list = document.getElementById("container-list");
+            list.innerHTML = "";
+
+            containers.forEach(c => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${c.name}</td>
+                    <td>${c.image}</td>
+                    <td><span id="status-${c.id}" class="status">Fetching...</span></td>
+                    <td>${c.port}</td>
+                    <td>
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                list.appendChild(row);
+
+                checkCLIStatus(c.port, `status-${c.id}`);
+            });
+        }
+
+        function launchContainer() {
+            const distro = document.getElementById("distro").value;
+            const version = document.getElementById("version").value;
+            const name = prompt("Container Name (leave blank for default):");
+
+            fetch("/api/start", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ distro, version, name: name.trim() ? name : null })
+            }).then(response => response.json())
+            .then(result => {
+                alert(result.message || "Container started!");
+                fetchContainers();
+            }).catch(error => {
+                alert("Error: " + error);
+            });
+        }
+
+        async function checkCLIStatus(port, statusId) {
+            const url = `/${port}/`;
+            const statusElement = document.getElementById(statusId);
+            statusElement.innerText = "Fetching...";
+            let instancePreparingShown = false;
+
+            (async function pollStatus() {
+                try {
+                    const response = await fetch(url, { method: "GET" });
+                    if (response.status === 200) {
+                        statusElement.innerHTML = `<span class="cli-link" onclick="openModal('${url}')">Open CLI</span>`;
+                    } else {
+                        throw new Error("Not ready");
+                    }
+                } catch {
+                    if (!instancePreparingShown) {
+                        statusElement.innerText = "Booting...";
+                        instancePreparingShown = true;
+                    }
+                    setTimeout(pollStatus, 2000);
+                }
+            })();
+        }
+
+        async function deleteContainer(id) {
+            const statusElement = document.getElementById(`status-${id}`);
+            if (statusElement) {
+                statusElement.innerText = "Deleting...";
+                statusElement.style.color = "orange";
+            }
+
+            await fetch("/api/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id })
+            });
+
+            fetchContainers();
+        }
+
+        // Function to apply scrollbar styles to iframe
+        function applyIframeScrollbar(iframe) {
+            if (iframe.contentDocument) {
+                const iframeDoc = iframe.contentDocument;
+                const style = iframeDoc.createElement("style");
+                style.innerHTML = `
+                    ::-webkit-scrollbar {
+                        width: 8px;
+                    }
+                    ::-webkit-scrollbar-track {
+                        background: #333;
+                        border-radius: 10px;
+                    }
+                    ::-webkit-scrollbar-thumb {
+                        background: #bbb;
+                        border-radius: 10px;
+                    }
+                    ::-webkit-scrollbar-thumb:hover {
+                        background: #999;
+                    }
+                `;
+                iframeDoc.head.appendChild(style);
+            }
+        }
+
+        function openModal(url) {
+            const iframe = document.getElementById("cliFrame");
+            iframe.src = url;
+            document.getElementById("cliModal").style.display = "flex";
+
+            iframe.onload = function() {
+                applyIframeScrollbar(iframe);
+            };
+        }
+
+        function closeModal() {
+            const iframe = document.getElementById("cliFrame");
+            const modal = document.getElementById("cliModal");
+
+            if (iframe.src && iframe.src !== "about:blank") {
+                const userConfirmed = confirm("Are you sure you want to leave the session?");
+                
+                if (!userConfirmed) {
+                    return;
+                }
+            }
+
+            // Fully Disable the "Leave Site?" Prompt
+            if (iframe.contentWindow) {
+                iframe.contentWindow.onbeforeunload = null;
+            }
+
+            // Remove iframe completely to avoid triggering `beforeunload`
+            const newIframe = document.createElement("iframe");
+            newIframe.id = "cliFrame";
+            newIframe.style.width = "100%";
+            newIframe.style.height = "100%";
+            newIframe.style.border = "none";
+
+            iframe.replaceWith(newIframe); // Swap iframe instead of clearing `src`
+
+            // Hide modal
+            modal.style.display = "none";
+        }
+
+        fetchContainers(); // Load active containers on page load
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loadDistros();
+
+            document.getElementById("launch").addEventListener("click", function () {
+                const distroSelect = document.getElementById("distro");
+                const versionSelect = document.getElementById("version");
+
+                let errors = [];
+
+                if (!distroSelect.value || distroSelect.value === "") {
+                    errors.push("Please select a distro.");
+                }
+                if (!versionSelect.value || versionSelect.value === "") {
+                    errors.push("Please select a version.");
+                }
+
+                if (errors.length > 0) {
+                    alert(errors.join("\n"));
+                } else {
+                    launchContainer();
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>

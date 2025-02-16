@@ -1,0 +1,166 @@
+from flask import Flask, request, jsonify
+import docker
+import random
+import subprocess
+import threading
+
+app = Flask(__name__)
+client = docker.DockerClient(base_url='unix:///var/run/docker.sock')
+
+DISTROS = {
+    "ubuntu": {
+        "latest": "ubuntu:latest",
+        "20.04": "ubuntu:20.04",
+        "22.04": "ubuntu:22.04"
+    },
+    "debian": {
+        "latest": "debian:latest",
+        "10": "debian:10",
+        "11": "debian:11",
+        "12": "debian:12"
+    },
+    "alpine": {
+        "latest": "alpine:latest",
+        "3.15": "alpine:3.15",
+        "3.16": "alpine:3.16"
+    },
+    "nginx": {
+        "latest": "nginx:latest",
+        "debian": "nginx:bookworm",
+        "alpine": "nginx:alpine"
+    }
+}
+
+
+@app.route('/distros', methods=['GET'])
+def get_distros():
+    return jsonify(DISTROS)  # Send DISTROS dictionary as JSON
+
+
+def update_nginx():
+    config_file = "/etc/nginx/http.d/dynamic_proxy.conf"
+
+    try:
+        with open(config_file, "w") as f:
+            f.write("# Dynamically generated proxy rules\n")
+
+            containers = client.containers.list()
+            for container in containers:
+                try:
+                    port = container.attrs['NetworkSettings']['Ports']['7681/tcp'][0]['HostPort']
+                    if port:
+                        f.write(f"""
+location /{port}/ {{
+    proxy_pass http://localhost:{port}/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+}}\n""")
+                except (KeyError, TypeError):
+                    continue
+
+        # Reload Nginx to apply changes
+        subprocess.run(["nginx", "-s", "reload"], check=True)
+
+    except Exception as e:
+        print(f"Error updating Nginx: {e}")
+
+
+@app.route('/start', methods=['POST'])
+def start_container():
+    data = request.json
+    distro = data.get("distro", "ubuntu")
+    version = data.get("version", "latest")
+    custom_name = data.get("name")
+
+    image = DISTROS.get(distro, {}).get(version)
+    if not image:
+        return jsonify({"error": "Invalid distro or version"}), 400
+
+    port = random.randint(3001, 3999)  # Random port to prevent conflicts
+
+    # Different command for Debian/Ubuntu to install ttyd
+    if distro in ["ubuntu", "debian"] or (distro == "nginx" and version != "alpine"):
+        command = (
+            "sh -c 'apt update && apt install -y curl && "
+            "curl -Lo /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && "
+            "chmod +x /usr/local/bin/ttyd && "
+            "ttyd -W bash & exec sleep infinity'"
+        )
+    else:
+        command = "sh -c 'apk add --no-cache ttyd && ttyd -W sh & exec sleep infinity'"
+
+
+    container = client.containers.run(
+        image,
+        detach=True,
+        ports={'7681/tcp': port},
+        command=command,
+        name=custom_name if custom_name else None
+    )
+
+    update_nginx()
+      
+    return jsonify({"message": "Container started", "port": port, "id": container.id, "name": container.name})
+
+
+# List running containers
+@app.route('/list', methods=['GET'])
+def list_containers():
+    containers = client.containers.list()
+    
+    # Extract all image names into a set
+    valid_images = {image for versions in DISTROS.values() for image in versions.values()}
+    
+    result = [
+        {
+            "id": c.id[:12],
+            "name": c.name,
+            "status": c.status,
+            "image": c.image.tags[0] if c.image.tags else c.image.id,
+            "port": next(iter(c.ports.values()))[0]["HostPort"] if c.ports else "N/A"
+        }
+        for c in containers
+        if any(tag in valid_images for tag in c.image.tags)  # Filter containers by image
+    ]
+
+    return jsonify(result)
+
+
+# Delete a container
+@app.route('/delete', methods=['POST'])
+def stop_container():
+    data = request.json
+    container_id = data.get("id")
+
+    try:
+        container = client.containers.get(container_id)
+        container.stop()
+        container.remove()
+        update_nginx()
+        return jsonify({"message": "Container deleted"})
+    except docker.errors.NotFound:
+        return jsonify({"error": "Container not found"}), 404
+    
+
+# Pre pull image
+def pull_images():
+    print("Pulling required images...")
+    for distro, versions in DISTROS.items():  
+        for version, image in versions.items(): 
+            try:
+                print(f"Pulling {image} for {distro} {version}...")
+                threading.Thread(target=client.images.pull, args=(image,), daemon=True).start()
+                print(f"✔ {image} ready!")
+            except docker.errors.APIError as e:
+                print(f"❌ Failed to pull {image}: {e}")
+
+
+if __name__ == "__main__":
+    # pull_images()
+    app.run(host="0.0.0.0", port=5000, debug=True)
+    
+
