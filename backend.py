@@ -106,7 +106,7 @@ def start_container():
 
     update_nginx()
 
-    return jsonify({"message": "Container started", "port": port, "id": container.id, "name": container.name})
+    return jsonify({"message": "Container started", "id": container.id, "name": container.name})
 
 
 # List running containers
