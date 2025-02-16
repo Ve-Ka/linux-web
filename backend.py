@@ -81,8 +81,7 @@ def start_container():
     # Ensure 'latest' always pulls the newest version
     if version == "latest":
         try:
-            # Pull the latest image using Docker API
-            docker_client.images.pull(image)
+            client.images.pull(image)
         except docker.errors.APIError as e:
             return jsonify({"error": f"Failed to pull image: {str(e)}"}), 500
 
@@ -107,7 +106,7 @@ def start_container():
     )
 
     update_nginx()
-      
+
     return jsonify({"message": "Container started", "port": port, "id": container.id, "name": container.name})
 
 
