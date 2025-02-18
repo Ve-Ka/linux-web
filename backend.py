@@ -115,7 +115,6 @@ def start_container():
     return jsonify({"message": "Container started", "id": container.id, "name": container.name})
 
 
-# List running containers
 @app.route('/list', methods=['GET'])
 def list_containers():
     containers = client.containers.list()
@@ -138,7 +137,6 @@ def list_containers():
     return jsonify(result)
 
 
-# Delete a container
 @app.route('/delete', methods=['POST'])
 def stop_container():
     data = request.json
@@ -154,8 +152,7 @@ def stop_container():
         return jsonify({"error": "Container not found"}), 404
     
 
-# Pre pull image
-def pull_images():
+def pre_pull_images():
     print("Pulling required images...")
     for distro, versions in DISTROS.items():  
         for version, image in versions.items(): 
@@ -168,13 +165,23 @@ def pull_images():
                 print(f"❌ Failed to pull {image}: {e}")
 
 
-if __name__ == "__main__":
-    pull_images()
+def start_docker_on_restart():
+    try:        
+        containers = client.containers.list(all=True)
+        
+        for container in containers:
+            if container.status != 'running':
+                print(f"Starting container {container.name}...")
+                container.start()
+                
+    except docker.errors.DockerException as e:
+        print(f"Error with Docker: {e}")
     
-    # Restart all docker and update nginx as the ports are allocated dynamically
-    subprocess.run("docker start $(docker ps -a -q)", shell=True, check=False, env={"DOCKER_HOST": "unix:///var/run/docker.sock"})
     update_nginx()
 
+if __name__ == "__main__":
+    pre_pull_images()    
+    start_docker_on_restart()
     app.run(host="0.0.0.0", port=5000, debug=True)
     
 
