@@ -105,6 +105,7 @@ def start_container():
     else:
         extra_command = "apk add --no-cache ttyd && ttyd -W sh"
 
+    command = f"sh -c '{default_cmd_str} & {extra_command} & exec sleep infinity'"
 
     container = client.containers.run(
         image,
