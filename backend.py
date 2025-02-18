@@ -172,7 +172,7 @@ if __name__ == "__main__":
     pull_images()
     
     # Restart all docker and update nginx as the ports are allocated dynamically
-    subprocess.run("docker start $(docker ps -a -q)", shell=True, check=False)
+    subprocess.run("docker start $(docker ps -a -q)", shell=True, check=False, env={"DOCKER_HOST": "unix:///var/run/docker.sock"})
     update_nginx()
 
     app.run(host="0.0.0.0", port=5000, debug=True)
