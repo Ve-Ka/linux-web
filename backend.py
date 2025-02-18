@@ -88,24 +88,15 @@ def start_container():
             function_name = inspect.currentframe().f_code.co_name
             print(f"Error in function '{function_name}': {e}")
 
-
-    # Append custom comand to default
-    image_obj = client.images.get(image)
-    default_cmd = image_obj.attrs["Config"]["Cmd"]
-
-    default_cmd_str = " ".join(default_cmd) if default_cmd else ""
-
     if distro in ["ubuntu", "debian"] or (distro == "nginx" and version != "alpine"):
-        extra_command = (
+        command = (
             "apt update && apt install -y curl && "
             "curl -Lo /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && "
             "chmod +x /usr/local/bin/ttyd && "
             "ttyd -W bash"
         )
     else:
-        extra_command = "apk add --no-cache ttyd && ttyd -W sh"
-
-    command = f"sh -c '{default_cmd_str} & {extra_command} & exec sleep infinity'"
+        command = "apk add --no-cache ttyd && ttyd -W sh"
 
     container = client.containers.run(
         image,
