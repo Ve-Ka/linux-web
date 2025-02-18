@@ -59,14 +59,16 @@ location /{port}/ {{
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
 }}\n""")
-                except (KeyError, TypeError):
-                    continue
+                except Exception as e:
+                    function_name = inspect.currentframe().f_code.co_name
+                    print(f"Error in function '{function_name}': {e}")
 
         # Reload Nginx to apply changes
         subprocess.run(["nginx", "-s", "reload"], check=True)
 
     except Exception as e:
-        print(f"Error updating Nginx: {e}")
+        function_name = inspect.currentframe().f_code.co_name
+        print(f"Error in function '{function_name}': {e}")
 
 
 @app.route('/start', methods=['POST'])
@@ -81,8 +83,10 @@ def start_container():
     if version == "latest":
         try:
             client.images.pull(image)
-        except docker.errors.APIError as e:
-            return jsonify({"error": f"Failed to pull image: {str(e)}"}), 500
+        except Exception as e:
+            function_name = inspect.currentframe().f_code.co_name
+            print(f"Error in function '{function_name}': {e}")
+
 
     # Append custom comand to default
     image_obj = client.images.get(image)
@@ -141,15 +145,15 @@ def list_containers():
 def stop_container():
     data = request.json
     container_id = data.get("id")
-
     try:
         container = client.containers.get(container_id)
         container.stop()
         container.remove()
         update_nginx()
         return jsonify({"message": "Container deleted"})
-    except docker.errors.NotFound:
-        return jsonify({"error": "Container not found"}), 404
+    except Exception as e:
+        function_name = inspect.currentframe().f_code.co_name
+        print(f"Error in function '{function_name}': {e}")
     
 
 def pre_pull_images():
@@ -161,21 +165,21 @@ def pre_pull_images():
                 threading.Thread(target=client.images.pull, args=(image,), daemon=True).start()
                 # client.images.pull(image)
                 print(f"✔ {image} ready!")
-            except docker.errors.APIError as e:
-                print(f"❌ Failed to pull {image}: {e}")
+            except Exception as e:
+                function_name = inspect.currentframe().f_code.co_name
+                print(f"Error in function '{function_name}': {e}")
 
 
 def start_docker_on_restart():
     try:        
         containers = client.containers.list(all=True)
-        
         for container in containers:
             if container.status != 'running':
                 print(f"Starting container {container.name}...")
                 container.start()
-                
-    except docker.errors.DockerException as e:
-        print(f"Error with Docker: {e}")
+    except Exception as e:
+        function_name = inspect.currentframe().f_code.co_name
+        print(f"Error in function '{function_name}': {e}")
     
     update_nginx()
 
