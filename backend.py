@@ -161,7 +161,8 @@ def pull_images():
         for version, image in versions.items(): 
             try:
                 print(f"Pulling {image} for {distro} {version}...")
-                threading.Thread(target=client.images.pull, args=(image,), daemon=True).start()
+                # threading.Thread(target=client.images.pull, args=(image,), daemon=True).start()
+                client.images.pull(image)
                 print(f"✔ {image} ready!")
             except docker.errors.APIError as e:
                 print(f"❌ Failed to pull {image}: {e}")
