@@ -88,15 +88,16 @@ def start_container():
             function_name = inspect.currentframe().f_code.co_name
             print(f"Error in function '{function_name}': {e}")
 
+    # Different command for Debian/Ubuntu to install ttyd
     if distro in ["ubuntu", "debian"] or (distro == "nginx" and version != "alpine"):
         command = (
-            "apt update && apt install -y curl && "
-            "curl /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && "
+            "sh -c 'apt update && apt install -y curl && "
+            "curl -Lo /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && "
             "chmod +x /usr/local/bin/ttyd && "
-            "ttyd -W bash"
+            "ttyd -W bash & exec sleep infinity'"
         )
     else:
-        command = "apk add --no-cache ttyd && ttyd -W sh"
+        command = "sh -c 'apk add --no-cache ttyd && ttyd -W sh & exec sleep infinity'"
 
     container = client.containers.run(
         image,
