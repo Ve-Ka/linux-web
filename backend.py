@@ -161,8 +161,8 @@ def pull_images():
         for version, image in versions.items(): 
             try:
                 print(f"Pulling {image} for {distro} {version}...")
-                # threading.Thread(target=client.images.pull, args=(image,), daemon=True).start()
-                client.images.pull(image)
+                threading.Thread(target=client.images.pull, args=(image,), daemon=True).start()
+                # client.images.pull(image)
                 print(f"✔ {image} ready!")
             except docker.errors.APIError as e:
                 print(f"❌ Failed to pull {image}: {e}")
@@ -170,7 +170,7 @@ def pull_images():
 
 if __name__ == "__main__":
     pull_images()
-    subprocess.run("docker start $(docker ps -a -q)", shell=True, check=True)
+    subprocess.run("docker start $(docker ps -a -q)", shell=True, check=False)
     app.run(host="0.0.0.0", port=5000, debug=True)
     
 
