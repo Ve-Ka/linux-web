@@ -10,8 +10,9 @@ client = docker.DockerClient(base_url='unix:///var/run/docker.sock')
 
 DISTROS = {
     "ubuntu": {
-        "20.04": "ubuntu:20.04",
         "22.04": "ubuntu:22.04",
+        "24.10": "ubuntu:24.10",
+        "25.04": "ubuntu:25.04",
         "latest": "ubuntu:latest"
     },
     "debian": {
@@ -21,8 +22,9 @@ DISTROS = {
         "latest": "debian:latest"
     },
     "alpine": {
-        "3.15": "alpine:3.15",
-        "3.16": "alpine:3.16",
+        "3.19": "alpine:3.19",
+        "3.20": "alpine:3.20",
+        "3.21": "alpine:3.21",
         "latest": "alpine:latest"
     },
     "nginx": {
