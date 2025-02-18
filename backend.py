@@ -84,17 +84,23 @@ def start_container():
         except docker.errors.APIError as e:
             return jsonify({"error": f"Failed to pull image: {str(e)}"}), 500
 
-    # Different command for Debian/Ubuntu to install ttyd
+    # Append custom comand to default
+    image_obj = client.images.get(image)
+    default_cmd = image_obj.attrs["Config"]["Cmd"]
+
+    default_cmd_str = " ".join(default_cmd) if default_cmd else ""
+
     if distro in ["ubuntu", "debian"] or (distro == "nginx" and version != "alpine"):
-        command = (
-            "sh -c 'apt update && apt install -y curl && "
+        extra_command = (
+            "apt update && apt install -y curl && "
             "curl -Lo /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && "
             "chmod +x /usr/local/bin/ttyd && "
-            "ttyd -W bash & exec sleep infinity'"
+            "ttyd -W bash"
         )
     else:
-        command = "sh -c 'apk add --no-cache ttyd && ttyd -W sh & exec sleep infinity'"
+        extra_command = "apk add --no-cache ttyd && ttyd -W sh"
 
+    command = f"sh -c '{default_cmd_str} && {extra_command} & exec sleep infinity'"
 
     container = client.containers.run(
         image,
@@ -163,6 +169,7 @@ def pull_images():
 
 if __name__ == "__main__":
     pull_images()
+    subprocess.run("docker start $(docker ps -a -q)", shell=True, check=True)
     app.run(host="0.0.0.0", port=5000, debug=True)
     
 
