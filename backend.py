@@ -91,7 +91,7 @@ def start_container():
     if distro in ["ubuntu", "debian"] or (distro == "nginx" and version != "alpine"):
         command = (
             "apt update && apt install -y curl && "
-            "curl -Lo /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && "
+            "curl /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && "
             "chmod +x /usr/local/bin/ttyd && "
             "ttyd -W bash"
         )
