@@ -35,8 +35,8 @@ DISTROS = {
     "node": {
         "23-alpine": "node:23-alpine",
         "23-bookworm": "node:23-bookworm",
-        "22-alpine": "node:23-alpine",
-        "22-bookworm": "node:23-bookworm",
+        "22-alpine": "node:22-alpine",
+        "22-bookworm": "node:22-bookworm",
         "latest": "node:latest"
     }
 }
