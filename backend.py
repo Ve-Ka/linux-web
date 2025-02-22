@@ -31,7 +31,7 @@ DISTROS = {
         "debian": "nginx:bookworm",
         "alpine": "nginx:alpine",
         "latest": "nginx:latest"
-    }
+    },
     "node": {
         "23-alpine": "node:23-alpine",
         "23-bookworm": "node:23-bookworm",
