@@ -98,7 +98,7 @@ def start_container():
             print(f"Error in function '{function_name}': {e}")
 
     # Different command for Debian/Ubuntu to install ttyd
-    if distro in ["ubuntu", "debian"] or (distro == "nginx" and version != "alpine"):
+    if "alpine" not in distro or "alpine" not in version:
         command = (
             "sh -c 'apt update && apt install -y curl && "
             "curl -Lo /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && "
