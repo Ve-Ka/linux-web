@@ -2,6 +2,8 @@
 
 This project was created for me to spin up docker images for linux command testing or various other experiments that requires clean slate, also this is portable as you can navigate to URL (with proper setup) on any device to test out docker instead of needing to go thorough trouble of installing docker on machine... needing to remember which command to spin up specific docker container... and other incovinience...
 
+
+
 ## Tech Stack
 
 - Backend: Python3 (Flask)
@@ -12,6 +14,8 @@ This project was created for me to spin up docker images for linux command testi
 - Docker
 - Docker in Docker
 
+
+
 ## Build & Run locally
 
 ```
@@ -20,6 +24,7 @@ docker run -d -p 3000:80 --privileged --name linux-web linux-web
 ```
 
 Navigate to `http://localhost:3000`
+
 
 
 ## Build Using docker-compose.yml
