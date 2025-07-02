@@ -186,7 +186,7 @@ def start_docker_on_restart():
     update_nginx()
 
 if __name__ == "__main__":
-    pre_pull_images()    
+    # pre_pull_images()    
     start_docker_on_restart()
     app.run(host="0.0.0.0", port=5000, debug=True)
     
